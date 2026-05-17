@@ -1,6 +1,6 @@
 # Streamlit Finance Dashboards
 
-Two interactive finance dashboards built with Streamlit. Each app demonstrates a different domain — portfolio analytics and options pricing — with separated analytics modules, full test suites, and interactive Plotly visualizations.
+Two interactive finance dashboards built with Streamlit. Each app demonstrates a different domain: portfolio analytics and options pricing, with separated analytics modules, full test suites, and interactive Plotly visualizations.
 
 ## Projects
 
