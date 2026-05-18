@@ -1,6 +1,6 @@
 """
 Options Pricing & Greeks Dashboard
-Built with Streamlit.
+Built with Streamlit — 
 
 Features:
 - Black-Scholes pricing for European calls & puts
@@ -871,13 +871,22 @@ with tab_live:
                             if mid > 0.01 and 0.5 * spot_price < strike < 1.5 * spot_price:
                                 iv = implied_volatility(mid, spot_price, strike, T_live, r_input, "call")
                                 if iv is not None and 0.01 < iv < 3.0:
+                                    intrinsic_val = max(spot_price - strike, 0)
+                                    time_val = mid - intrinsic_val
+                                    g = all_greeks(spot_price, strike, T_live, r_input, iv, "call")
                                     iv_records.append({
                                         "expiration": exp_date,
                                         "days_to_exp": max((exp_dt - datetime.now()).days, 1),
                                         "strike": strike,
                                         "moneyness": strike / spot_price,
                                         "mid_price": mid,
+                                        "intrinsic": intrinsic_val,
+                                        "time_value": max(time_val, 0),
                                         "iv": iv,
+                                        "delta": g["delta"],
+                                        "gamma": g["gamma"],
+                                        "theta": g["theta"],
+                                        "vega": g["vega"],
                                         "volume": row.get("volume", 0) or 0,
                                         "open_interest": row.get("openInterest", 0) or 0,
                                         "type": "call",
@@ -889,13 +898,22 @@ with tab_live:
                             if mid > 0.01 and 0.5 * spot_price < strike < 1.5 * spot_price:
                                 iv = implied_volatility(mid, spot_price, strike, T_live, r_input, "put")
                                 if iv is not None and 0.01 < iv < 3.0:
+                                    intrinsic_val = max(strike - spot_price, 0)
+                                    time_val = mid - intrinsic_val
+                                    g = all_greeks(spot_price, strike, T_live, r_input, iv, "put")
                                     iv_records.append({
                                         "expiration": exp_date,
                                         "days_to_exp": max((exp_dt - datetime.now()).days, 1),
                                         "strike": strike,
                                         "moneyness": strike / spot_price,
                                         "mid_price": mid,
+                                        "intrinsic": intrinsic_val,
+                                        "time_value": max(time_val, 0),
                                         "iv": iv,
+                                        "delta": g["delta"],
+                                        "gamma": g["gamma"],
+                                        "theta": g["theta"],
+                                        "vega": g["vega"],
                                         "volume": row.get("volume", 0) or 0,
                                         "open_interest": row.get("openInterest", 0) or 0,
                                         "type": "put",
@@ -1050,21 +1068,34 @@ with tab_live:
                         display_df = iv_df.copy()
                         display_df["strike"] = display_df["strike"].map("${:.2f}".format)
                         display_df["mid_price"] = display_df["mid_price"].map("${:.2f}".format)
+                        display_df["intrinsic"] = display_df["intrinsic"].map("${:.2f}".format)
+                        display_df["time_value"] = display_df["time_value"].map("${:.2f}".format)
                         display_df["iv"] = display_df["iv"].map("{:.1%}".format)
+                        display_df["delta"] = display_df["delta"].map("{:.4f}".format)
+                        display_df["gamma"] = display_df["gamma"].map("{:.4f}".format)
+                        display_df["theta"] = display_df["theta"].map("{:.4f}".format)
+                        display_df["vega"] = display_df["vega"].map("{:.4f}".format)
                         display_df["volume"] = display_df["volume"].fillna(0).astype(int)
                         display_df["open_interest"] = display_df["open_interest"].fillna(0).astype(int)
                         display_df = display_df.rename(columns={
                             "expiration": "Expiration",
                             "days_to_exp": "DTE",
                             "strike": "Strike",
-                            "mid_price": "Mid Price",
+                            "mid_price": "Mid",
+                            "intrinsic": "Intrinsic",
+                            "time_value": "Time Val",
                             "iv": "IV",
-                            "volume": "Volume",
-                            "open_interest": "Open Interest",
+                            "delta": "Δ",
+                            "gamma": "Γ",
+                            "theta": "Θ",
+                            "vega": "ν",
+                            "volume": "Vol",
+                            "open_interest": "OI",
                             "type": "Type",
                             "moneyness": "Moneyness",
                         })
-                        display_cols = ["Expiration", "DTE", "Strike", "Mid Price", "IV", "Volume", "Open Interest"]
+                        display_cols = ["Expiration", "DTE", "Strike", "Mid", "Intrinsic", "Time Val",
+                                        "IV", "Δ", "Γ", "Θ", "ν", "Vol", "OI"]
 
                         with chain_tab_calls:
                             calls_table = display_df[display_df["Type"] == "call"][display_cols].sort_values(
