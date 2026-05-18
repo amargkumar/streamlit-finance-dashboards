@@ -1042,6 +1042,42 @@ with tab_live:
                         ]["iv"].mean()
                         sum4.metric("ATM IV", f"{atm_avg:.1%}" if not pd.isna(atm_avg) else "N/A")
 
+                        # ── Options Chain Table ──
+                        st.markdown("#### Options Chain")
+
+                        chain_tab_calls, chain_tab_puts = st.tabs(["📗 Calls", "📕 Puts"])
+
+                        display_df = iv_df.copy()
+                        display_df["strike"] = display_df["strike"].map("${:.2f}".format)
+                        display_df["mid_price"] = display_df["mid_price"].map("${:.2f}".format)
+                        display_df["iv"] = display_df["iv"].map("{:.1%}".format)
+                        display_df["volume"] = display_df["volume"].astype(int)
+                        display_df["open_interest"] = display_df["open_interest"].astype(int)
+                        display_df = display_df.rename(columns={
+                            "expiration": "Expiration",
+                            "days_to_exp": "DTE",
+                            "strike": "Strike",
+                            "mid_price": "Mid Price",
+                            "iv": "IV",
+                            "volume": "Volume",
+                            "open_interest": "Open Interest",
+                            "type": "Type",
+                            "moneyness": "Moneyness",
+                        })
+                        display_cols = ["Expiration", "DTE", "Strike", "Mid Price", "IV", "Volume", "Open Interest"]
+
+                        with chain_tab_calls:
+                            calls_table = display_df[display_df["Type"] == "call"][display_cols].sort_values(
+                                ["Expiration", "Strike"]
+                            )
+                            st.dataframe(calls_table, hide_index=True, use_container_width=True, height=400)
+
+                        with chain_tab_puts:
+                            puts_table = display_df[display_df["Type"] == "put"][display_cols].sort_values(
+                                ["Expiration", "Strike"]
+                            )
+                            st.dataframe(puts_table, hide_index=True, use_container_width=True, height=400)
+
             except Exception as e:
                 st.error(f"Error fetching data: {str(e)}")
                 st.info("Make sure the ticker is valid and markets have been open recently.")
