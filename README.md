@@ -1,6 +1,6 @@
 # ⚡ Options Pricing & Greeks Dashboard
 
-A Streamlit-powered Black-Scholes options analyzer built as a learning project for a quantitative finance internship at Capstone Investment Advisors.
+A Streamlit-powered Black-Scholes options analyzer.
 
 ## Features
 
@@ -104,5 +104,3 @@ pytest test_options_analytics.py -v
 - **pytest** — unit testing
 
 ---
-
-*Built for learning — not financial advice.*
