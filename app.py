@@ -1,6 +1,6 @@
 """
 Options Pricing & Greeks Dashboard
-Built with Streamlit — 
+Built with Streamlit.
 
 Features:
 - Black-Scholes pricing for European calls & puts
