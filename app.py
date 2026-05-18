@@ -347,8 +347,23 @@ with tab_greeks:
             st.plotly_chart(styled_fig(fig_g), use_container_width=True)
             st.caption(desc)
 
-
-# ── TAB 2: Greeks Surface ──
+    # Export data
+    greeks_export = pd.DataFrame({
+        "spot": data["spots"],
+        "price": data["price"],
+        "delta": data["delta"],
+        "gamma": data["gamma"],
+        "theta": data["theta"],
+        "vega": data["vega"],
+        "rho": data["rho"],
+    })
+    st.download_button(
+        "⬇️ Export Greeks vs Spot Data",
+        greeks_export.to_csv(index=False),
+        file_name=f"greeks_vs_spot_K{K_input:.0f}_T{T_days}d.csv",
+        mime="text/csv",
+        key="export_greeks_spot",
+    )
 with tab_surface:
     st.markdown("Surface plots showing how each Greek varies across **spot price** (x) and **volatility** (y).")
 
@@ -423,8 +438,26 @@ with tab_surface:
             )
             st.plotly_chart(styled_fig(fig_gs), use_container_width=True)
 
-
-# ── TAB 3: Time Decay ──
+    # Export flattened surface data
+    surface_rows = []
+    for i, v in enumerate(surface_data["vols"]):
+        for j, s in enumerate(surface_data["spots"]):
+            surface_rows.append({
+                "spot": s, "vol": v,
+                "price": surface_data["price"][i, j],
+                "delta": surface_data["delta"][i, j],
+                "gamma": surface_data["gamma"][i, j],
+                "theta": surface_data["theta"][i, j],
+                "vega": surface_data["vega"][i, j],
+            })
+    surface_export = pd.DataFrame(surface_rows)
+    st.download_button(
+        "⬇️ Export Surface Data",
+        surface_export.to_csv(index=False),
+        file_name=f"greeks_surface_K{K_input:.0f}_T{T_days}d.csv",
+        mime="text/csv",
+        key="export_surface",
+    )
 with tab_decay:
     st.markdown("How the option price and theta evolve as expiration approaches.")
 
@@ -526,6 +559,20 @@ with tab_decay:
     )
     st.plotly_chart(styled_fig(fig_multi), use_container_width=True)
 
+    # Export time decay data
+    decay_export = pd.DataFrame({
+        "days_to_exp": time_data["times_days"],
+        "price": time_data["price"],
+        "theta": time_data["theta"],
+    })
+    st.download_button(
+        "⬇️ Export Time Decay Data",
+        decay_export.to_csv(index=False),
+        file_name=f"time_decay_S{S_input:.0f}_K{K_input:.0f}.csv",
+        mime="text/csv",
+        key="export_decay",
+    )
+
 
 # ── TAB 4: Put-Call Parity ──
 with tab_parity:
@@ -606,6 +653,23 @@ with tab_parity:
     )
     st.plotly_chart(styled_fig(fig_parity), use_container_width=True)
 
+    # Export parity data
+    parity_export = pd.DataFrame({
+        "strike": strikes,
+        "call_price": calls_arr,
+        "put_price": puts_arr,
+        "c_minus_p": np.array(calls_arr) - np.array(puts_arr),
+        "s_minus_pv_k": S_input - strikes * np.exp(-r_input * T_input),
+        "deviation": deviations,
+    })
+    st.download_button(
+        "⬇️ Export Parity Data",
+        parity_export.to_csv(index=False),
+        file_name=f"put_call_parity_S{S_input:.0f}_T{T_days}d.csv",
+        mime="text/csv",
+        key="export_parity",
+    )
+
 
 # ── TAB 5: Scenario Analysis ──
 with tab_scenarios:
@@ -679,6 +743,25 @@ with tab_scenarios:
     sg4.metric("Theta", f"{shocked_greeks['theta']:.4f}", delta=f"{shocked_greeks['theta'] - greeks['theta']:.4f}")
     sg5.metric("Vega", f"{shocked_greeks['vega']:.4f}", delta=f"{shocked_greeks['vega'] - greeks['vega']:.4f}")
     sg6.metric("Rho", f"{shocked_greeks['rho']:.4f}", delta=f"{shocked_greeks['rho'] - greeks['rho']:.4f}")
+
+    # Export scenario P&L grid
+    scenario_rows = []
+    for i, dv in enumerate(vol_shocks):
+        for j, ds in enumerate(spot_shocks):
+            scenario_rows.append({
+                "spot_shock_pct": ds,
+                "vol_shock_pp": dv,
+                "new_price": scenario_grid[i, j],
+                "pnl": pnl_grid[i, j],
+            })
+    scenario_export = pd.DataFrame(scenario_rows)
+    st.download_button(
+        "⬇️ Export Scenario P&L Data",
+        scenario_export.to_csv(index=False),
+        file_name=f"scenario_pnl_{option_type}_S{S_input:.0f}_K{K_input:.0f}.csv",
+        mime="text/csv",
+        key="export_scenario",
+    )
 
 
 # ── TAB 6: Live Options Chain ──
@@ -1102,9 +1185,17 @@ with tab_live:
                                 ["Expiration", "Strike"]
                             )
                             st.dataframe(calls_table, hide_index=True, use_container_width=True, height=400)
+
+                            # Raw data export (unformatted numbers for Excel)
+                            raw_export_cols = ["expiration", "days_to_exp", "strike", "mid_price",
+                                               "intrinsic", "time_value", "iv", "delta", "gamma",
+                                               "theta", "vega", "volume", "open_interest"]
+                            raw_calls = iv_df[iv_df["type"] == "call"][raw_export_cols].sort_values(
+                                ["expiration", "strike"]
+                            )
                             st.download_button(
                                 "⬇️ Export Calls CSV",
-                                calls_table.to_csv(index=False),
+                                raw_calls.to_csv(index=False),
                                 file_name=f"{live_ticker}_calls_chain.csv",
                                 mime="text/csv",
                             )
@@ -1114,20 +1205,24 @@ with tab_live:
                                 ["Expiration", "Strike"]
                             )
                             st.dataframe(puts_table, hide_index=True, use_container_width=True, height=400)
+
+                            raw_puts = iv_df[iv_df["type"] == "put"][raw_export_cols].sort_values(
+                                ["expiration", "strike"]
+                            )
                             st.download_button(
                                 "⬇️ Export Puts CSV",
-                                puts_table.to_csv(index=False),
+                                raw_puts.to_csv(index=False),
                                 file_name=f"{live_ticker}_puts_chain.csv",
                                 mime="text/csv",
                             )
 
                         # Full chain export
-                        full_export = display_df[["Type"] + display_cols].sort_values(
-                            ["Type", "Expiration", "Strike"]
+                        raw_full = iv_df[["type"] + raw_export_cols].sort_values(
+                            ["type", "expiration", "strike"]
                         )
                         st.download_button(
                             "⬇️ Export Full Chain CSV (Calls + Puts)",
-                            full_export.to_csv(index=False),
+                            raw_full.to_csv(index=False),
                             file_name=f"{live_ticker}_full_chain.csv",
                             mime="text/csv",
                         )
