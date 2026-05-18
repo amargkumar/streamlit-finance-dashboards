@@ -730,6 +730,25 @@ with tab_live:
                             decreasing_line_color="#f85149",
                             name="Price",
                         ))
+
+                        # Simple Moving Averages
+                        sma_config = [
+                            (9, "#ffd700", "dash"),
+                            (20, "#58a6ff", "solid"),
+                            (100, "#bc8cff", "solid"),
+                            (200, "#f85149", "dot"),
+                        ]
+                        for window, color, dash in sma_config:
+                            if len(hist) >= window:
+                                sma = hist["Close"].rolling(window=window).mean()
+                                fig_stock.add_trace(go.Scatter(
+                                    x=hist.index,
+                                    y=sma,
+                                    mode="lines",
+                                    line=dict(color=color, width=1.5, dash=dash),
+                                    name=f"SMA {window}",
+                                ))
+
                         # Add volume as bar chart on secondary axis
                         fig_stock.add_trace(go.Bar(
                             x=hist.index,
@@ -751,7 +770,8 @@ with tab_live:
                             ),
                             xaxis_rangeslider_visible=False,
                             height=420,
-                            showlegend=False,
+                            showlegend=True,
+                            legend=dict(orientation="h", y=1.12, x=0.5, xanchor="center"),
                         )
                         st.plotly_chart(styled_fig(fig_stock), use_container_width=True)
 
