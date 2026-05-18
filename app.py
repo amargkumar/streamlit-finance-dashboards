@@ -788,6 +788,70 @@ with tab_live:
                         ps3.metric("Period Low", f"${low_52:.2f}")
                         ps4.metric("Avg Daily Volume", f"{avg_vol:,.0f}")
 
+                        # ── Historical Volatility & Volume Charts ──
+                        hv_col1, hv_col2 = st.columns(2)
+
+                        with hv_col1:
+                            # Historical (realized) volatility
+                            daily_returns = hist["Close"].pct_change().dropna()
+                            fig_hv = go.Figure()
+
+                            for window, color, label in [
+                                (20, "#ffd700", "20d HV"),
+                                (60, "#58a6ff", "60d HV"),
+                                (120, "#bc8cff", "120d HV"),
+                            ]:
+                                if len(daily_returns) >= window:
+                                    hv = daily_returns.rolling(window=window).std() * np.sqrt(252) * 100
+                                    fig_hv.add_trace(go.Scatter(
+                                        x=hv.index, y=hv,
+                                        mode="lines",
+                                        line=dict(color=color, width=1.8),
+                                        name=label,
+                                    ))
+
+                            fig_hv.update_layout(
+                                title="Historical (Realized) Volatility",
+                                xaxis_title="Date",
+                                yaxis_title="Annualized Vol (%)",
+                                height=350,
+                                hovermode="x unified",
+                            )
+                            st.plotly_chart(styled_fig(fig_hv), use_container_width=True)
+                            st.caption("Rolling realized vol — compare this to implied vol to spot opportunities.")
+
+                        with hv_col2:
+                            # Volume chart with moving average
+                            fig_vol = go.Figure()
+                            fig_vol.add_trace(go.Bar(
+                                x=hist.index, y=hist["Volume"],
+                                marker_color=np.where(
+                                    hist["Close"] >= hist["Open"],
+                                    "rgba(63,185,80,0.4)",
+                                    "rgba(248,81,73,0.4)"
+                                ),
+                                name="Daily Volume",
+                            ))
+
+                            if len(hist) >= 20:
+                                vol_sma = hist["Volume"].rolling(window=20).mean()
+                                fig_vol.add_trace(go.Scatter(
+                                    x=hist.index, y=vol_sma,
+                                    mode="lines",
+                                    line=dict(color="#58a6ff", width=2),
+                                    name="20d Avg Volume",
+                                ))
+
+                            fig_vol.update_layout(
+                                title="Trading Volume",
+                                xaxis_title="Date",
+                                yaxis_title="Volume",
+                                height=350,
+                                hovermode="x unified",
+                            )
+                            st.plotly_chart(styled_fig(fig_vol), use_container_width=True)
+                            st.caption("Volume spikes often precede or coincide with big option activity.")
+
                     st.markdown("---")
 
                     # Collect IV data across expirations
