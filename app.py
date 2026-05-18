@@ -1,6 +1,6 @@
 """
 Options Pricing & Greeks Dashboard
-Built with Streamlit
+Built with Streamlit.
 
 Features:
 - Black-Scholes pricing for European calls & puts
@@ -708,6 +708,67 @@ with tab_live:
 
                     with live_col2:
                         st.metric(f"{live_ticker} Spot Price", f"${spot_price:.2f}")
+
+                    # ── Stock Price Chart ──
+                    st.markdown(f"#### {live_ticker} Price History")
+                    period_choice = st.radio(
+                        "Period", ["1M", "3M", "6M", "1Y", "2Y"], index=2, horizontal=True,
+                        key="price_period"
+                    )
+                    period_map = {"1M": "1mo", "3M": "3mo", "6M": "6mo", "1Y": "1y", "2Y": "2y"}
+                    hist = ticker_obj.history(period=period_map[period_choice])
+
+                    if len(hist) > 0:
+                        fig_stock = go.Figure()
+                        fig_stock.add_trace(go.Candlestick(
+                            x=hist.index,
+                            open=hist["Open"],
+                            high=hist["High"],
+                            low=hist["Low"],
+                            close=hist["Close"],
+                            increasing_line_color="#3fb950",
+                            decreasing_line_color="#f85149",
+                            name="Price",
+                        ))
+                        # Add volume as bar chart on secondary axis
+                        fig_stock.add_trace(go.Bar(
+                            x=hist.index,
+                            y=hist["Volume"],
+                            marker_color="rgba(88,166,255,0.15)",
+                            name="Volume",
+                            yaxis="y2",
+                        ))
+                        fig_stock.update_layout(
+                            title=f"{live_ticker} — {period_choice}",
+                            yaxis_title="Price ($)",
+                            yaxis2=dict(
+                                title="Volume",
+                                overlaying="y",
+                                side="right",
+                                showgrid=False,
+                                range=[0, hist["Volume"].max() * 4],
+                                tickfont=dict(color="#7d8590"),
+                            ),
+                            xaxis_rangeslider_visible=False,
+                            height=420,
+                            showlegend=False,
+                        )
+                        st.plotly_chart(styled_fig(fig_stock), use_container_width=True)
+
+                        # Key stats row
+                        price_change = hist["Close"].iloc[-1] - hist["Close"].iloc[0]
+                        price_change_pct = price_change / hist["Close"].iloc[0]
+                        high_52 = hist["High"].max()
+                        low_52 = hist["Low"].min()
+                        avg_vol = hist["Volume"].mean()
+
+                        ps1, ps2, ps3, ps4 = st.columns(4)
+                        ps1.metric("Period Return", f"{price_change_pct:.2%}", delta=f"${price_change:.2f}")
+                        ps2.metric("Period High", f"${high_52:.2f}")
+                        ps3.metric("Period Low", f"${low_52:.2f}")
+                        ps4.metric("Avg Daily Volume", f"{avg_vol:,.0f}")
+
+                    st.markdown("---")
 
                     # Collect IV data across expirations
                     iv_records = []
