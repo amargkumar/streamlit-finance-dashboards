@@ -1051,8 +1051,8 @@ with tab_live:
                         display_df["strike"] = display_df["strike"].map("${:.2f}".format)
                         display_df["mid_price"] = display_df["mid_price"].map("${:.2f}".format)
                         display_df["iv"] = display_df["iv"].map("{:.1%}".format)
-                        display_df["volume"] = display_df["volume"].astype(int)
-                        display_df["open_interest"] = display_df["open_interest"].astype(int)
+                        display_df["volume"] = display_df["volume"].fillna(0).astype(int)
+                        display_df["open_interest"] = display_df["open_interest"].fillna(0).astype(int)
                         display_df = display_df.rename(columns={
                             "expiration": "Expiration",
                             "days_to_exp": "DTE",
