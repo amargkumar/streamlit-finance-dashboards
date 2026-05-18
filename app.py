@@ -1102,12 +1102,35 @@ with tab_live:
                                 ["Expiration", "Strike"]
                             )
                             st.dataframe(calls_table, hide_index=True, use_container_width=True, height=400)
+                            st.download_button(
+                                "⬇️ Export Calls CSV",
+                                calls_table.to_csv(index=False),
+                                file_name=f"{live_ticker}_calls_chain.csv",
+                                mime="text/csv",
+                            )
 
                         with chain_tab_puts:
                             puts_table = display_df[display_df["Type"] == "put"][display_cols].sort_values(
                                 ["Expiration", "Strike"]
                             )
                             st.dataframe(puts_table, hide_index=True, use_container_width=True, height=400)
+                            st.download_button(
+                                "⬇️ Export Puts CSV",
+                                puts_table.to_csv(index=False),
+                                file_name=f"{live_ticker}_puts_chain.csv",
+                                mime="text/csv",
+                            )
+
+                        # Full chain export
+                        full_export = display_df[["Type"] + display_cols].sort_values(
+                            ["Type", "Expiration", "Strike"]
+                        )
+                        st.download_button(
+                            "⬇️ Export Full Chain CSV (Calls + Puts)",
+                            full_export.to_csv(index=False),
+                            file_name=f"{live_ticker}_full_chain.csv",
+                            mime="text/csv",
+                        )
 
             except Exception as e:
                 st.error(f"Error fetching data: {str(e)}")
