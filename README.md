@@ -1,57 +1,107 @@
-# Streamlit Finance Dashboards
+# ⚡ Options Pricing & Greeks Dashboard
 
-Two interactive finance dashboards built with Streamlit. Each app demonstrates a different domain: portfolio analytics and options pricing, with separated analytics modules, full test suites, and interactive Plotly visualizations.
+A Streamlit-powered Black-Scholes options analyzer.
 
-## Projects
+## Features
 
-### [Portfolio Analytics Dashboard](./portfolio-dashboard/)
+| Tab | What it does |
+|-----|-------------|
+| **Greeks vs Spot** | Option price + all 4 key Greeks plotted across spot prices, with strike/spot markers |
+| **Greeks Surface** | 3D surface plots of price & Greeks across spot × volatility (interactive rotation) |
+| **Time Decay** | Price & theta vs days to expiration, multi-DTE overlay comparison |
+| **Put-Call Parity** | Verifies C − P = S − PV(K) across all strikes, flags any deviations |
+| **Scenario Analysis** | P&L heatmap under simultaneous spot & vol shocks, shocked Greeks display |
 
-Multi-asset portfolio construction and analysis with real market data from Yahoo Finance.
+### Key Metrics (top bar)
+- Option Price (Black-Scholes)
+- Delta (Δ), Gamma (Γ), Theta (Θ), Vega (ν), Rho (ρ)
+- Moneyness indicator (ITM / ATM / OTM)
 
-- **Performance** — cumulative returns vs benchmark, rolling returns
-- **Risk Analysis** — drawdown chart, return distribution, VaR/CVaR, rolling volatility
-- **Correlations** — heatmap and rolling pairwise correlation
-- **Monte Carlo** — forward simulation with terminal wealth distribution
-- **Efficient Frontier** — mean-variance optimization (Max Sharpe, Min Variance), Capital Market Line
-- **Factor Analysis** — Fama-French 3-factor regression, alpha/beta decomposition, return attribution
-
-25 unit tests · `analytics.py` separated from UI · scipy SLSQP optimization · statsmodels OLS regression
-
-### [Options Pricing & Greeks Dashboard](./options-dashboard/)
-
-Black-Scholes European options pricing with full Greeks visualization and implied volatility solver.
-
-- **Greeks vs Spot** — price curve with intrinsic value overlay, delta/gamma/theta/vega profiles
-- **Greeks Surface** — interactive 3D surfaces across spot × volatility
-- **Time Decay** — theta acceleration near expiry, multi-DTE curve comparison
-- **Put-Call Parity** — no-arbitrage verification across strikes
-- **Scenario Analysis** — P&L heatmap under simultaneous spot and vol shocks
-- **IV Calculator** — backs out implied volatility from market prices via Brent's method
-
-40 unit tests · `options_analytics.py` separated from UI · scipy root-finding for IV
+### Implied Volatility Calculator
+Enter an observed market price in the sidebar and click "Compute IV" to back out the implied volatility using Brent's method.
 
 ## Quick Start
 
 ```bash
-# Portfolio dashboard
-cd portfolio-dashboard
+# 1. Clone and enter the project
+git clone <your-repo-url>
+cd options-dashboard
+
+# 2. Install dependencies
 pip install -r requirements.txt
+
+# 3. Run the app
 streamlit run app.py
 
-# Options dashboard
-cd options-dashboard
-pip install -r requirements.txt
-streamlit run app.py
+# 4. Run tests
+pytest test_options_analytics.py -v
 ```
+
+The app opens at `http://localhost:8501`.
+
+## Project Structure
+
+```
+options-dashboard/
+├── app.py                     # Streamlit UI — layout, charts, interactivity
+├── options_analytics.py       # Pure analytics (BS pricing, Greeks, IV solver)
+├── test_options_analytics.py  # 40 unit tests (pytest)
+├── requirements.txt           # Python dependencies
+├── .gitignore                 # Git ignore rules
+└── README.md                  # This file
+```
+
+### Architecture: Separated Analytics
+
+All math lives in `options_analytics.py` with zero Streamlit dependency, so it can be:
+- **Tested** directly with pytest (40 tests covering pricing, Greeks, parity, IV)
+- **Reused** in notebooks, trading scripts, or other apps
+- **Reviewed** independently from the UI code
+
+## Finance & Math Concepts
+
+| Concept | Implementation | Why it matters |
+|---------|---------------|----------------|
+| **Black-Scholes model** | `bs_call`, `bs_put` | Foundation of options pricing theory |
+| **d1, d2** | `d1()`, `d2()` | Core intermediate values driving all BS formulas |
+| **Delta (Δ)** | `delta()` | Hedge ratio — how many shares to hold to delta-hedge |
+| **Gamma (Γ)** | `gamma()` | Convexity — how quickly delta changes (rebalancing frequency) |
+| **Theta (Θ)** | `theta()` | Time decay — the cost of holding an option position |
+| **Vega (ν)** | `vega()` | Vol sensitivity — critical for vol trading strategies |
+| **Rho (ρ)** | `rho()` | Rate sensitivity — matters for long-dated options |
+| **Implied Volatility** | `implied_volatility()` via Brent's method | Market's expectation of future vol, extracted from prices |
+| **Put-Call Parity** | `put_call_parity_check()` | No-arbitrage relationship — foundational constraint |
+| **Scenario/Stress Testing** | Spot × vol shock grid | How traders assess risk under extreme moves |
+
+## Testing
+
+```bash
+pytest test_options_analytics.py -v
+```
+
+40 tests covering:
+- Black-Scholes pricing (boundary cases, monotonicity, expiration)
+- Put-call parity (exact equality, multiple strikes)
+- All 5 Greeks (ranges, peaks, relationships, edge cases)
+- Implied volatility (round-trip recovery, failure cases)
+- Grid computation (shapes, monotonicity)
+
+## Ideas for Extension
+
+- **American options** — binomial tree or finite difference pricing
+- **Volatility smile/surface** — fetch real options chains and plot IV surface
+- **Strategy builder** — multi-leg P&L diagrams (spreads, strangles, condors)
+- **Real-time data** — connect to a live options feed
+- **Greeks hedging simulator** — simulate delta-hedging P&L over time
+- **Jump-diffusion model** — Merton's model for fat-tailed distributions
 
 ## Tech Stack
 
-Streamlit · Plotly · NumPy · Pandas · SciPy · statsmodels · yfinance · pytest
-
-## Architecture
-
-Both projects follow the same pattern: a pure analytics module with no framework dependency (`analytics.py` / `options_analytics.py`) and a Streamlit app that handles layout and charting (`app.py`). This separation makes the math testable, reusable in notebooks or scripts, and reviewable independently from the UI.
+- **Streamlit** — UI framework
+- **NumPy** — numerical computing
+- **SciPy** — `norm` for Black-Scholes CDFs, `brentq` for IV root-finding
+- **Plotly** — interactive 2D and 3D charting
+- **pytest** — unit testing
 
 ---
-
 
