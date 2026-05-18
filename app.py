@@ -1,6 +1,6 @@
 """
 Options Pricing & Greeks Dashboard
-Built with Streamlit.
+Built with Streamlit
 
 Features:
 - Black-Scholes pricing for European calls & puts
@@ -260,8 +260,8 @@ k7.metric("Moneyness", moneyness)
 if calc_iv:
     iv_result = implied_volatility(market_price_input, S_input, K_input, T_input, r_input, option_type)
     if iv_result is not None:
-        st.success(f"**Implied Volatility: {iv_result:.2%}** — backed out from a market price of ${market_price_input:.2f} "
-                   f"for a {type_label} with S=${S_input:.0f}, K=${K_input:.0f}, T={T_days}d")
+        st.success(f"**Implied Volatility: {iv_result:.2%}** — backed out from market price "
+                   f"\\${market_price_input:.2f} for a {type_label} with S=\\${S_input:.0f}, K=\\${K_input:.0f}, T={T_days}d")
     else:
         st.error("Could not compute IV — the market price may be below intrinsic value or the option is expired.")
 
