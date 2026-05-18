@@ -1,4 +1,4 @@
-#Options Pricing & Greeks Dashboard
+## Options Pricing & Greeks Dashboard
 
 A Streamlit-powered Black-Scholes options analyzer.
 
