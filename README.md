@@ -123,5 +123,3 @@ pytest test_options_analytics.py -v
 - **Plotly** — interactive 2D and 3D charting
 - **yfinance** — real-time market and options chain data
 - **pytest** — unit testing
-
----
