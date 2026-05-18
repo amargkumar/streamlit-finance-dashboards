@@ -1,6 +1,6 @@
 """
 Options Pricing & Greeks Dashboard
-Built with Streamlit — a project for Capstone Investment Advisors internship prep.
+Built with Streamlit.
 
 Features:
 - Black-Scholes pricing for European calls & puts
@@ -907,6 +907,5 @@ with tab_live:
 # ──────────────────────────────────────────────
 st.markdown("---")
 st.caption(
-    "Built with Streamlit • Black-Scholes model (European options) • "
-    "Not financial advice — for educational & demonstration purposes only."
+    "Built with Streamlit • Black-Scholes model (European options)"
 )
